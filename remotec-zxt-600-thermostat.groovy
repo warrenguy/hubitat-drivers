@@ -410,7 +410,7 @@ private Map getZWAVE_COMMAND_VERSIONS()
   0x86 : 1   // Version
 ]}
 
-private getTHERMOSTAT_MODE_MAP()
+private Map getTHERMOSTAT_MODE_MAP()
 {[
   off            : hubitat.zwave.commands.thermostatmodev2.ThermostatModeReport.MODE_OFF            ,
   heat           : hubitat.zwave.commands.thermostatmodev2.ThermostatModeReport.MODE_HEAT           ,
