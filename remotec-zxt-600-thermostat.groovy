@@ -901,7 +901,7 @@ List setheatingSetpoint ( BigDecimal value )
 
   switch ( device.currentState( "thermostatMode" )?.value )
   {
-    case "cool" :
+    case "heat" :
     case "auto" :
       infoLog( "Setting heatingSetpoint ${ value }" )
       state.lastheatingSetpoint = value
