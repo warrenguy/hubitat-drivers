@@ -80,6 +80,9 @@ metadata
     attribute "temperature"        , "number"
     attribute "swingMode"          , "enum" , [ "true" , "false" ]
     attribute "remoteCode"         , "number"
+    attribute "reportTempLevel"    , "string"
+    attribute "reportTime"         , "string"
+    attribute "internalInfrared"   , "boolean"
     attribute "temperatureOffset"  , "number"
     attribute "schedule"           , "json_object"
 
@@ -208,6 +211,29 @@ metadata
       defaultValue : 0
     )
 
+    input (
+      name         : "internalInfrared"   ,
+      type         : "boolean"            ,
+      title        : "Enable built-in IR" ,
+      defaultValue : true
+    )
+
+    input (
+      name         : "reportTempLevel" ,
+      type         : "enum"            ,
+      options      : REPORT_TEMP_VALUES.keySet().toList()     ,
+      title        : "Temperature change reporting threshold" ,
+      defaultValue : "off"
+    )
+
+    input (
+      name         : "reportTime" ,
+      type         : "enum"       ,
+      options      : REPORT_TIME_VALUES.keySet().toList() ,
+      title        : "Time reporting threshold"           ,
+      defaultValue : "1 hour"
+    )
+
     //////////////////////////////
     // supportedThermostatModes //
     //////////////////////////////
@@ -317,20 +343,61 @@ private Integer getTEMP_OFFSET_SIZE()  {    1 }
 
 private Integer getSWING_MODE_PARAM()  { 0x21 }
 private Integer getSWING_MODE_SIZE()   {    1 }
-private Map     getSWING_MODE_VALUES() {[ "true" : 1 , "false" : 0 ]}
+private Map     getSWING_MODE_VALUES()
+{[
+  "true"  : 0x01 ,
+  "false" : 0x00
+]}
+
+private Integer getINTERNAL_IR_PARAM() { 0x20 }
+private Integer getINTERNAL_IR_SIZE()  {    1 }
+private Map     getINTERNAL_IR_VALUES()
+{[
+  "true"  : 0xFF ,
+  "false" : 0x00
+]}
+
+private Integer getREPORT_TEMP_PARAM() { 0x1E }
+private Integer getREPORT_TEMP_SIZE()  {    1 }
+private Map     getREPORT_TEMP_VALUES()
+{[
+  "off" : 0x00 ,
+  "0.5" : 0x01 ,
+  "1.0" : 0x02 ,
+  "1.5" : 0x03 ,
+  "2.0" : 0x04 ,
+  "2.5" : 0x05 ,
+  "3.0" : 0x06 ,
+  "3.5" : 0x07 ,
+  "4.0" : 0x08
+]}
+
+private Integer getREPORT_TIME_PARAM() { 0x22 }
+private Integer getREPORT_TIME_SIZE()  {    1 }
+private Map     getREPORT_TIME_VALUES()
+{[
+  "1 hour"  : 0x01 ,
+  "2 hours" : 0x02 ,
+  "3 hours" : 0x03 ,
+  "4 hours" : 0x04 ,
+  "5 hours" : 0x05 ,
+  "6 hours" : 0x06 ,
+  "7 hours" : 0x07 ,
+  "8 hours" : 0x08
+]}
 
 private Integer[] getALL_PARAMS()
-{
-  [
-    REMOTE_CODE_PARAM ,
-    TEMP_OFFSET_PARAM ,
-    SWING_MODE_PARAM
-  ]
-}
+{[
+  REMOTE_CODE_PARAM ,
+  TEMP_OFFSET_PARAM ,
+  SWING_MODE_PARAM  ,
+  INTERNAL_IR_PARAM ,
+  REPORT_TEMP_PARAM ,
+  REPORT_TIME_PARAM
+]}
 
 private Map getZWAVE_COMMAND_VERSIONS()
 {[
-
   0x20 : 1 , // Basic
   0x27 : 1 , // Switch All
   0x31 : 1 , // Sensor Multilevel
@@ -341,7 +408,6 @@ private Map getZWAVE_COMMAND_VERSIONS()
   0x72 : 1 , // Manufacturer Specific
   0x80 : 1 , // Battery
   0x86 : 1   // Version
-
 ]}
 
 private getTHERMOSTAT_MODE_MAP()
@@ -399,6 +465,16 @@ List refresh ()
   delayBetween( commands.collect { it.format() } , msBetweenCommands )
 }
 
+private Map getCONFIG_STATE()
+{[
+  "temperatureOffset" : ( (String) temperatureOffset   ) == ( (String) device.currentState( "temperatureOffset" )?.value ) ,
+  "remoteCode"        : ( (String) remoteCode          ) == ( (String) device.currentState( "remoteCode"        )?.value ) ,
+  "swingMode"         : ( (String) state.lastSwingMode ) == ( (String) device.currentState( "swingMode"         )?.value ) ,
+  "internalInfrared"  : ( (String) internalInfrared    ) == ( (String) device.currentState( "internalInfrared"  )?.value ) ,
+  "reportTempLevel"   : ( (String) reportTempLevel     ) == ( (String) device.currentState( "reportTempLevel"   )?.value ) ,
+  "reportTime"        : ( (String) reportTime          ) == ( (String) device.currentState( "reportTime"        )?.value ) ,
+]}
+
 List configure ()
 {
   infoLog( "CONFIGURE" )
@@ -406,15 +482,18 @@ List configure ()
   setSupportedThermostatModes()
   setSupportedThermostatFanModes()
 
-  List commands = []
+  List commands    = []
+  Map  configState = CONFIG_STATE
 
-  if ( state.lastTemperatureOffset == null || (String) state.lastTemperatureOffset != (String) temperatureOffset || (String) device.currentState( "temperatureOffset" )?.value != (String) temperatureOffset )
-    commands.addAll(*[ configureTemperatureOffset() ])
+  if ( !CONFIG_STATE.temperatureOffset ) commands.addAll(*[ configureTemperatureOffset() ])
+  if ( !CONFIG_STATE.remoteCode        ) commands.addAll(*[ configureRemoteCode()        ])
+  if ( !CONFIG_STATE.swingMode         ) commands.addAll(*[ configureSwingMode()         ])
+  if ( !CONFIG_STATE.internalInfrared  ) commands.addAll(*[ configureInternalInfrared()  ])
+  if ( !CONFIG_STATE.reportTempLevel   ) commands.addAll(*[ configureReportTempLevel()   ])
+  if ( !CONFIG_STATE.reportTime        ) commands.addAll(*[ configureReportTime()        ])
 
-  if ( state.lastRemoteCode == null || (String) remoteCode != (String) device.currentState( "remoteCode" )?.value )
-    commands.addAll(*[ configureRemoteCode() ])
-
-  if ( commands.size < 1 ) debugLog( "CONFIGURE : no commands to run" )
+  if ( commands.size < 1 )
+    debugLog( "CONFIGURE : no commands to run" )
 
   else
   {
@@ -587,6 +666,24 @@ private Map zwaveCommand ( hubitat.zwave.commands.configurationv1.ConfigurationR
       data.value     = command.configurationValue[ 0 ] == 1 ? "true" : "false"
       break
 
+    case INTERNAL_IR_PARAM :
+      data.name      = "internalInfrared"
+      data.displayed = false
+      data.value     = INTERNAL_IR_VALUES.find { it.value == command.configurationValue[ 0 ] }?.key
+      break
+
+    case REPORT_TIME_PARAM :
+      data.name      = "reportTime"
+      data.displayed = false
+      data.value     = REPORT_TIME_VALUES.find { it.value == command.configurationValue[ 0 ] }?.key
+      break
+
+    case REPORT_TEMP_PARAM :
+      data.name      = "reportTempLevel"
+      data.displayed = false
+      data.value     = REPORT_TEMP_VALUES.find { it.value == command.configurationValue[ 0 ] }?.key
+      break
+
     default :
       debugLog( "Unhandled command : ${ command.inspect() }" )
   }
@@ -671,8 +768,7 @@ private List configureSwingMode ()
   state.lastSwingMode = cur
   sendEvent( name : "swingMode" , value : cur )
 
-  List commands = configureCommands( SWING_MODE_PARAM , SWING_MODE_SIZE , [ val ] )
-  delayBetween( commands.collect { it.format() } , msBetweenCommands )
+  configureCommands( SWING_MODE_PARAM , SWING_MODE_SIZE , [ val ] )
 }
 
 List swingModeOn  () { setSwingMode( "true"  ) }
@@ -682,7 +778,67 @@ private List setSwingMode ( String val )
 {
   sendEvent( name : "swingMode" , value : val )
   pauseExecution( 500 )
-  configureSwingMode()
+  configure()
+}
+
+private List configureInternalInfrared ()
+{
+  String  opt = internalInfrared == null ? "true" : internalInfrared
+  Integer val = INTERNAL_IR_VALUES[ opt ]
+
+  if ( val == null )
+  {
+    log.warn "Invalid value for internalInfrared : ${ opt }"
+    return []
+  }
+
+  sendEvent( name : "internalInfrared" , value : opt )
+  pauseExecution( 500 )
+
+  debugLog( "setInternalInfrared: ${ opt } (${ val })" )
+  state.lastInternalInfrared = internalInfrared
+
+  configureCommands( INTERNAL_IR_PARAM , INTERNAL_IR_SIZE , [ val ] )
+}
+
+private List configureReportTempLevel ()
+{
+  String  opt = reportTempLevel == null ? "true" : reportTempLevel
+  Integer val = REPORT_TEMP_VALUES[ opt ]
+
+  if ( val == null )
+  {
+    log.warn "Invalid value for reportTempLevel : ${ opt }"
+    return []
+  }
+
+  sendEvent( name : "reportTempLevel" , value : opt )
+  pauseExecution( 500 )
+
+  debugLog( "setReportTempLevel: ${ opt } (${ val })" )
+  state.lastReportTempLevel = reportTempLevel
+
+  configureCommands( REPORT_TEMP_PARAM , REPORT_TEMP_SIZE , [ val ] )
+}
+
+private List configureReportTime ()
+{
+  String  opt = reportTime == null ? "true" : reportTime
+  Integer val = REPORT_TIME_VALUES[ opt ]
+
+  if ( val == null )
+  {
+    log.warn "Invalid value for reportTime : ${ opt }"
+    return []
+  }
+
+  sendEvent( name : "reportTime" , value : opt )
+  pauseExecution( 500 )
+
+  debugLog( "setReportTime: ${ opt } (${ val })" )
+  state.lastReportTime = reportTime
+
+  configureCommands( REPORT_TIME_PARAM , REPORT_TIME_SIZE , [ val ] )
 }
 
 List setCoolingSetpoint ()
