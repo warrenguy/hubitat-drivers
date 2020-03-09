@@ -152,41 +152,41 @@ metadata
     input (
       name         : "setpointStepSize"   ,
       type         : "number"             ,
-      range        : "0..2"               ,
+      range        : "1..2"               ,
       title        : "Setpoint step size" ,
-      defaultValue : 0.5
+      defaultValue : 1
     )
 
     input (
       name         : "coolingSetpointMin"   ,
       type         : "number"               ,
-      range        : "0..32"                ,
+      range        : "17..30"               ,
       title        : "Min cooling setpoint" ,
-      defaultValue : 18
+      defaultValue : 17
     )
 
     input (
       name         : "coolingSetpointMax"   ,
       type         : "number"               ,
-      range        : "0..32"                ,
+      range        : "17..30"               ,
       title        : "Max cooling setpoint" ,
-      defaultValue : 32
+      defaultValue : 30
     )
 
     input (
       name         : "heatingSetpointMin"   ,
       type         : "number"               ,
-      range        : "0..32"                ,
+      range        : "17..30"               ,
       title        : "Min heating setpoint" ,
-      defaultValue : 16
+      defaultValue : 17
     )
 
     input (
       name         : "heatingSetpointMax"   ,
       type         : "number"               ,
-      range        : "0..32"                ,
+      range        : "17..30"               ,
       title        : "Max heating setpoint" ,
-      defaultValue : 32
+      defaultValue : 30
     )
 
     ///////////////////////////
