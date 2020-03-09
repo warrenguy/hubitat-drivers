@@ -213,7 +213,7 @@ metadata
 
     input (
       name         : "internalInfrared"   ,
-      type         : "boolean"            ,
+      type         : "bool"               ,
       title        : "Enable built-in IR" ,
       defaultValue : true
     )
@@ -261,15 +261,15 @@ metadata
 
     input (
       name         : "thermostatDrySupported" ,
-      type         : "bool"                    ,
+      type         : "bool"                   ,
       title        : "Thermostat Mode Dry"    ,
       defaultValue : true
     )
 
     input (
       name         : "thermostatFanOnlySupported" ,
-      type         : "bool"                    ,
-      title        : "Thermostat Mode Fan Only"    ,
+      type         : "bool"                       ,
+      title        : "Thermostat Mode Fan Only"   ,
       defaultValue : true
     )
 
