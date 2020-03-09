@@ -792,7 +792,7 @@ private List configureInternalInfrared ()
     return []
   }
 
-  sendEvent( name : "internalInfrared" , value : opt )
+  sendEvent( name : "internalInfrared" , value : opt , displayed : false )
   pauseExecution( 500 )
 
   debugLog( "setInternalInfrared: ${ opt } (${ val })" )
@@ -812,7 +812,7 @@ private List configureReportTempLevel ()
     return []
   }
 
-  sendEvent( name : "reportTempLevel" , value : opt )
+  sendEvent( name : "reportTempLevel" , value : opt , displayed : false )
   pauseExecution( 500 )
 
   debugLog( "setReportTempLevel: ${ opt } (${ val })" )
@@ -832,7 +832,7 @@ private List configureReportTime ()
     return []
   }
 
-  sendEvent( name : "reportTime" , value : opt )
+  sendEvent( name : "reportTime" , value : opt , displayed : false )
   pauseExecution( 500 )
 
   debugLog( "setReportTime: ${ opt } (${ val })" )
