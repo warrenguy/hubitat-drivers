@@ -996,8 +996,6 @@ List setThermostatMode ( String mode )
     zwave.basicV1.basicGet()                   ,
   ])
 
-  if ( alwaysSendSwingMode ) commands.addAll( configureSwingMode() )
-
   if ( setTemp != null )
     commands.addAll ([
       zwave.thermostatSetpointV2.thermostatSetpointSet (
@@ -1010,6 +1008,9 @@ List setThermostatMode ( String mode )
         setpointType: setpointMode
       )
     ])
+
+  if ( alwaysSendSwingMode && mode != "off" )
+    commands.addAll( configureSwingMode() )
 
   debugLog( "setThermostatMode : ${ commands.inspect() }" )
   state.lastThermostatMode = mode
