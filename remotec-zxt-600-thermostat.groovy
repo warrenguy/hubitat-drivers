@@ -43,32 +43,12 @@ metadata
     // COMMANDS //
     //////////////
 
-    command "configure"
-    command "refresh"
-
-    command "auto"
-    command "cool"
-    command "heat"
-    command "fanOnly"
-    command "dry"
-    command "emergencyHeat"
-    command "off"
-
-    command "fanAuto"
-    command "fanCirculate"
-    command "fanOn"
-    command "fanOff"
     command "fanLow"
     command "fanMedium"
     command "fanHigh"
 
     command "swingModeOn"
     command "swingModeOff"
-
-    command "setCoolingSetpoint"   // number  coolingSetpoint
-    command "setHeatingSetpoint"   // number  heatingSetpoint
-    command "setThermostatFanMode" // enum    thermostatFanMode
-    command "setThermostatMode"    // enum    thermostatMode
 
     ////////////////
     // ATTRIBUTES //
