@@ -214,6 +214,13 @@ metadata
       defaultValue : "1 hour"
     )
 
+    input (
+      name         : "alwaysSendSwingMode"            ,
+      type         : "bool"                           ,
+      title        : "Always send Swing Mode setting" ,
+      defaultValue : false
+    )
+
     //////////////////////////////
     // supportedThermostatModes //
     //////////////////////////////
@@ -986,8 +993,10 @@ List setThermostatMode ( String mode )
   commands.addAll ([
     zwave.thermostatModeV2.thermostatModeSet( mode: THERMOSTAT_MODE_MAP[ mode ] ) ,
     zwave.thermostatModeV2.thermostatModeGet() ,
-    zwave.basicV1.basicGet()
+    zwave.basicV1.basicGet()                   ,
   ])
+
+  if ( alwaysSendSwingMode ) commands.addAll( configureSwingMode() )
 
   if ( setTemp != null )
     commands.addAll ([
