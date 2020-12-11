@@ -15,6 +15,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Small edit by Marc O. Chouinard <mochouinard@gmail.com> 2020-12-11 : Fix setting the heating temperature so it work reliably.  Tested on a split unit with heat pump.
+ *
  */
 
 metadata
@@ -860,7 +863,7 @@ List setCoolingSetpoint ( BigDecimal value )
 
     default :
       sendEvent( name : "coolingSetpoint" , value : value , unit : "C" )
-      state.lastHeatingSetpoint = value
+      state.lastCoolingSetpoint = value
       debugLog( "Not setting coolingSetpoint (mode is ${ device.currentState( "thermostatMode" )?.value })" )
       break
   }
@@ -872,15 +875,15 @@ List setHeatingSetpoint ()
   setHeatingSetpoint( new BigDecimal( device.currentState( "heatingSetpoint" )?.value ) )
 }
 
-List setheatingSetpoint ( BigDecimal value )
+List setHeatingSetpoint ( BigDecimal value )
 {
   if ( value.remainder( (BigDecimal) setpointStepSize ) != 0 )
   {
-    if ( value < state.lastheatingSetpoint )
-      value = state.lastheatingSetpoint - setpointStepSize
+    if ( value < state.lastHeatingSetpoint )
+      value = state.lastHeatingSetpoint - setpointStepSize
 
-    else if ( value > state.lastheatingSetpoint )
-      value = state.lastheatingSetpoint + setpointStepSize
+    else if ( value > state.lastHeatingSetpoint )
+      value = state.lastHeatingSetpoint + setpointStepSize
   }
 
   value = Math.max( (BigDecimal) heatingSetpointMin , value )
@@ -891,7 +894,7 @@ List setheatingSetpoint ( BigDecimal value )
     case "heat" :
     case "auto" :
       infoLog( "Setting heatingSetpoint ${ value }" )
-      state.lastheatingSetpoint = value
+      state.lastHeatingSetpoint = value
       sendEvent( name : "heatingSetpoint" , value : value , unit : "C" )
       pauseExecution( 500 )
       setThermostatMode( device.currentState( "thermostatMode" ).value )
